@@ -56,4 +56,5 @@ Apache httpd [rewrite engine](https://httpd.apache.org/docs/2.4/rewrite/intro.ht
 - [Certbot not creating acme-challenge folder](https://stackoverflow.com/questions/38382739/certbot-not-creating-acme-challenge-folder)
 - [Error message "Forbidden You don't have permission to access / on this server"](https://stackoverflow.com/questions/10873295/error-message-forbidden-you-dont-have-permission-to-access-on-this-server)
 - [Apache 2.4: mod_alias, mod_rewrite, mod_proxy execution order](https://serverfault.com/questions/966675/apache-2-4-mod-alias-mod-rewrite-mod-proxy-execution-order)
+- [Redirect HTTP to HTTPS in Apache](https://linuxize.com/post/redirect-http-to-https-in-apache/)
 - 
