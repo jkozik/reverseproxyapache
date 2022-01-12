@@ -39,6 +39,29 @@ Apache httpd [rewrite engine](https://httpd.apache.org/docs/2.4/rewrite/intro.ht
  ```
  I am pretty sure the rewrite rules get run before the ProxyPass ones. 
  
+ # Redirect http to https
+ 
+ I am also redirecting http to https. In summary, 
+ - http://napervilleweather.com -> https://napervilleweather.com
+ - http://www.napervilleweather.com -> https://napervilleweather.com
+ - https://www.napervilleweather.com -> https://napervilleweather.com
+
+ Thus the apache httpd configuration file changes
+ ```
+ ...
+ RewriteEngine on
+ RewriteCond %{SERVER_NAME} =www.napervilleweather.com [OR]
+ RewriteCond %{SERVER_NAME} =napervilleweather.com
+ ReWriteRule ^ https://napervilleweather.com%{REQUEST_URI} [END,QSA,R=permanent]
+ ...
+ ```
+ 
+ 
+ and all of this traffic gets redirected to my kubernetes cluster
+- https://napervilleweather.com -> http://192.168.100.174:30140/
+
+
+ 
  # certificates from Lets Encrypt using certbot client
  
 
