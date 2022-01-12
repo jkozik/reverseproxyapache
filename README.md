@@ -104,6 +104,81 @@ For this to work I setup a webroot path to an existing letsencrypt directory on 
 
 The certbot -w /var/lib/letsencrypt/http_challenges/napervilleweather.com command line option tells certbot where the put the temporary creditials. The DocumentRoot directive tells the apache httpd where the root of the webserver is stored and where one can find the .well-known/acme-challenge directory.
 
+# Final configuration files
+## proxy.napervilleweather.com-le-ssl.conf
+```
+[root@dell1 sites-enabled]# cat proxy.napervilleweather.com-le-ssl.conf
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+ ServerName napervilleweather.com
+ ServerAlias www.napervilleweather.com
+
+ DocumentRoot /var/lib/letsencrypt/http_challenges/napervilleweather.com
+  <Directory /var/lib/letsencrypt/http_challenges/napervilleweather.com>
+          Allow from All
+  </Directory>
+  <Location /.well-known/acme-challenge>
+      Require all granted
+      Options Indexes
+  </Location>
+
+ RewriteEngine on
+ RewriteCond %{SERVER_NAME} =www.napervilleweather.com
+ ReWriteRule ^ https://napervilleweather.com%{REQUEST_URI} [END,QSA,R=permanent]
+
+ ProxyPreserveHost On
+ ProxyPass /.well-known !
+ ProxyPass / http://192.168.100.174:30140/
+ ProxyPassReverse / http://192.168.100.174:30140/
+
+   ErrorLog logs/napervilleweather.com-error_log
+   CustomLog logs/napervilleweather.com-access_log combined
+
+SSLCertificateFile /etc/letsencrypt/live/napervilleweather.com/cert.pem
+SSLCertificateKeyFile /etc/letsencrypt/live/napervilleweather.com/privkey.pem
+Include /etc/letsencrypt/options-ssl-apache.conf
+SSLCertificateChainFile /etc/letsencrypt/live/napervilleweather.com/chain.pem
+</VirtualHost>
+</IfModule>
+[root@dell1 sites-enabled]#
+```
+## proxy.napervilleweather.com.conf
+```
+[root@dell1 sites-enabled]# cat proxy.napervilleweather.com.conf
+<VirtualHost *:80>
+ ServerName napervilleweather.com
+ ServerAlias www.napervilleweather.com
+
+ DocumentRoot /var/lib/letsencrypt/http_challenges/napervilleweather.com
+  <Directory /var/lib/letsencrypt/http_challenges/napervilleweather.com>
+          Allow from All
+  </Directory>
+  <Location /.well-known/acme-challenge>
+      Require all granted
+      Options Indexes
+  </Location>
+
+ RewriteEngine on
+ RewriteCond %{SERVER_NAME} =www.napervilleweather.com [OR]
+ RewriteCond %{SERVER_NAME} =napervilleweather.com
+ ReWriteRule ^ https://napervilleweather.com%{REQUEST_URI} [END,QSA,R=permanent]
+
+ ProxyPreserveHost On
+ ProxyPass /.well-known !
+ ProxyPass / http://192.168.100.174:30140/
+ ProxyPassReverse / http://192.168.100.174:30140/
+   ErrorLog logs/napervilleweather.com-error_log
+   CustomLog logs/napervilleweather.com-access_log combined
+
+
+#RewriteEngine on
+#RewriteCond %{SERVER_NAME} =napervilleweather.com
+#RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+#RewriteRule ^ https://napervilleweather.com%{REQUEST_URI} [END,NE,R=permanent]
+</VirtualHost>
+[root@dell1 sites-enabled]#
+```
+
 
 # References
 - [How To Redirect www to Non-www with Apache on CentOS 7](https://www.digitalocean.com/community/tutorials/how-to-redirect-www-to-non-www-with-apache-on-centos-7)
