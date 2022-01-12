@@ -57,13 +57,53 @@ Apache httpd [rewrite engine](https://httpd.apache.org/docs/2.4/rewrite/intro.ht
  ```
  
  
- and all of this traffic gets redirected to my kubernetes cluster
-- https://napervilleweather.com -> http://192.168.100.174:30140/
-
-
+ From the redirects above, the apache virtual server napervilleweather.com:443 terminates the SSL and redirects the web traffic to my kubernetes cluster on my home LAN http://192.168.100.174:30140/.  This final redirection is done by the ProxyPass/ProxyPassReserve commands and completes the reverse proxy function.
  
- # certificates from Lets Encrypt using certbot client
- 
+# certificates from Lets Encrypt using certbot client
+I use the cerbot client to create the certificates for napervilleweather.com.  To do that, I choose to use the webroot plugin.  This lets me create and renew the certificate by using a path within the website to support the handshake with the Let's Encrypt server:  napervilleweather.com/.well-known/acme-challenge. The certbot tool temporarily stores some credentials there and the server gets them to verify that the person running the certbot tool has control of the website.  
+
+Here's an example certbot execution:
+```
+[root@dell1 sites-enabled]# certbot certonly --cert-name napervilleweather.com --webroot -w /var/lib/letsencrypt/http_ch
+allenges/napervilleweather.com -d napervilleweather.com -d www.napervilleweather.com --dry-run
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator webroot, Installer None
+Starting new HTTPS connection (1): acme-staging-v02.api.letsencrypt.org
+Cert not due for renewal, but simulating renewal for dry run
+Simulating renewal of an existing certificate for napervilleweather.com and www.napervilleweather.com
+Performing the following challenges:
+http-01 challenge for napervilleweather.com
+http-01 challenge for www.napervilleweather.com
+Using the webroot path /var/lib/letsencrypt/http_challenges/napervilleweather.com for all unmatched domains.
+Waiting for verification...
+Cleaning up challenges
+
+IMPORTANT NOTES:
+ - The dry run was successful.
+[root@dell1 sites-enabled]#
+```
+
+Note: the certificate for napervilleweather.com also includes www.napervilleweather.com.  Also note the above command was run as "dry-run".
+
+For this to work I setup a webroot path to an existing letsencrypt directory on the reverse proxy server.  The real web server is inside my kubernetes cluster.  To make this work, I need to expand the virtual server definition to map .well-known/acme-challenge to a local directory and not let the reverse proxy forward the traffic.  See the additional configuration file directives:
+```
+ DocumentRoot /var/lib/letsencrypt/http_challenges/napervilleweather.com
+  <Directory /var/lib/letsencrypt/http_challenges/napervilleweather.com>
+          Allow from All
+  </Directory>
+  <Location /.well-known/acme-challenge>
+      Require all granted
+      Options Indexes
+  </Location>
+ ...
+ ProxyPreserveHost On
+ ProxyPass /.well-known !
+ ProxyPass / http://192.168.100.174:30140/
+ ProxyPassReverse / http://192.168.100.174:30140/
+ ...
+```
+
+The certbot -w /var/lib/letsencrypt/http_challenges/napervilleweather.com command line option tells certbot where the put the temporary creditials. The DocumentRoot directive tells the apache httpd where the root of the webserver is stored and where one can find the .well-known/acme-challenge directory.
 
 
 # References
