@@ -1,5 +1,4 @@
-# reverseproxyapache
-Reverse Proxy using Apache enabling Letsencrypt SSL with certbot webroot
+# Apache Reverse Proxy with Lets Encrypt SSL setup with certbot -webroot
 
 For my home network, I have only one IP address and therefore one port 80/443 for all of my home web services.  This repository documents how I setup an Apache reverse proxy to route port 80/443 traffic to the various different services I support.  This includes a blogs, storage, media and websites.  Some running on standalone servers, others running in a kubernetes cluster.
 
