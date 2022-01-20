@@ -182,6 +182,8 @@ SSLCertificateChainFile /etc/letsencrypt/live/napervilleweather.com/chain.pem
 # SSL Test
 - https://www.ssllabs.com/ssltest/analyze.html?d=napervilleweather.com
 - https://sslmate.com/caa/
+- https://securityheaders.com/?q=napervilleweather.com&followRedirects=on
+- https://hstspreload.org/
 
 # References
 - [How To Redirect www to Non-www with Apache on CentOS 7](https://www.digitalocean.com/community/tutorials/how-to-redirect-www-to-non-www-with-apache-on-centos-7)
