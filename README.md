@@ -178,7 +178,51 @@ SSLCertificateChainFile /etc/letsencrypt/live/napervilleweather.com/chain.pem
 </VirtualHost>
 [root@dell1 sites-enabled]#
 ```
+# napervilleweather.net certbot
+I did the same thing for napervilleweather.net.  Here's the certbot execution run on my reverse proxy server as root:
+```
+[root@dell1 logs]# certbot certonly --cert-name napervilleweather.net --webroot -w /var/lib/letsencrypt/http_challenges/napervilleweather.net -d napervilleweather.net -d www.napervilleweather.net
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator webroot, Installer None
+Starting new HTTPS connection (1): acme-v02.api.letsencrypt.org
 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+You are updating certificate napervilleweather.net to include new domain(s):
++ www.napervilleweather.net
+
+You are also removing previously included domain(s):
+(None)
+
+Did you intend to make this change?
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+(U)pdate certificate/(C)ancel: U
+Renewing an existing certificate for napervilleweather.net and www.napervilleweather.net
+Performing the following challenges:
+http-01 challenge for www.napervilleweather.net
+Using the webroot path /var/lib/letsencrypt/http_challenges/napervilleweather.net for all unmatched domains.
+Waiting for verification...
+Cleaning up challenges
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at:
+   /etc/letsencrypt/live/napervilleweather.net/fullchain.pem
+   Your key file has been saved at:
+   /etc/letsencrypt/live/napervilleweather.net/privkey.pem
+   Your certificate will expire on 2022-04-25. To obtain a new or
+   tweaked version of this certificate in the future, simply run
+   certbot again. To non-interactively renew *all* of your
+   certificates, run "certbot renew"
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+   
+```   
+# SSL Test
+- https://www.ssllabs.com/ssltest/analyze.html?d=napervilleweather.com
+- https://sslmate.com/caa/
+- https://securityheaders.com/?q=napervilleweather.com&followRedirects=on
+- https://hstspreload.org/
 
 # References
 - [How To Redirect www to Non-www with Apache on CentOS 7](https://www.digitalocean.com/community/tutorials/how-to-redirect-www-to-non-www-with-apache-on-centos-7)
