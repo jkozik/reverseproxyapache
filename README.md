@@ -218,6 +218,75 @@ IMPORTANT NOTES:
    Donating to EFF:                    https://eff.org/donate-le
    
 ```   
+# New ISP, no Port 80 Access
+My ISP was bought by another company. My port 80 based webpages are blocked, by network management policy. But port 443 works just fine. So I need to get a new certificate, but I cannot use http-01 challenges to verify my domain name ownership.  Thus I am using the certbot's DNS Validation option.  Here's the command I used to get jackkozik.com validated:
+```
+[root@dell1 ~]# certbot certonly --dry-run --manual --preferred-challenges dns --cert-name jackkozik.com -d "*.jackkozik.com"
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator manual, Installer None
+Starting new HTTPS connection (1): acme-staging-v02.api.letsencrypt.org
+Simulating a certificate request for *.jackkozik.com
+Performing the following challenges:
+dns-01 challenge for jackkozik.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Please deploy a DNS TXT record under the name
+_acme-challenge.jackkozik.com with the following value:
+
+FYbXoFQ7SMP1Qx77xU3s5g0Qf70Xc6Py7nTOC4f7Fs4
+
+Before continuing, verify the record is deployed.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Press Enter to Continue
+Waiting for verification...
+Resetting dropped connection: acme-staging-v02.api.letsencrypt.org
+Cleaning up challenges
+
+IMPORTANT NOTES:
+ - The dry run was successful.
+[root@dell1 ~]# certbot certonly --manual --preferred-challenges dns --cert-name jackkozik.com -d "*.jackkozik.com"
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator manual, Installer None
+Starting new HTTPS connection (1): acme-v02.api.letsencrypt.org
+Requesting a certificate for *.jackkozik.com
+Performing the following challenges:
+dns-01 challenge for jackkozik.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Please deploy a DNS TXT record under the name
+_acme-challenge.jackkozik.com with the following value:
+
+HRFcPo1JVmwHPK8B2KGnlzBEdYFi6-V56DpZoInZWmE
+
+Before continuing, verify the record is deployed.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Press Enter to Continue
+Waiting for verification...
+Cleaning up challenges
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at:
+   /etc/letsencrypt/live/jackkozik.com/fullchain.pem
+   Your key file has been saved at:
+   /etc/letsencrypt/live/jackkozik.com/privkey.pem
+   Your certificate will expire on 2022-08-13. To obtain a new or
+   tweaked version of this certificate in the future, simply run
+   certbot again. To non-interactively renew *all* of your
+   certificates, run "certbot renew"
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+
+You have mail in /var/spool/mail/root
+[root@dell1 ~]#
+```
+
+Note:  I am using ZoneEdit and the _acme-challenge.jackkozik.com update to my DNS server is easy to do.  ZoneEdit is nicley setup for this.  [Certbot manual page](https://eff-certbot.readthedocs.io/en/stable/using.html#manual) and [article](https://www.digitalocean.com/community/tutorials/how-to-acquire-a-let-s-encrypt-certificate-using-dns-validation-with-certbot-dns-digitalocean-on-ubuntu-20-04).
+
+
+
+
 # SSL Test
 - https://www.ssllabs.com/ssltest/analyze.html?d=napervilleweather.com
 - https://sslmate.com/caa/
