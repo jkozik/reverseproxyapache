@@ -284,7 +284,93 @@ You have mail in /var/spool/mail/root
 
 Note:  I am using ZoneEdit and the _acme-challenge.jackkozik.com update to my DNS server is easy to do.  ZoneEdit is nicley setup for this.  [Certbot manual page](https://eff-certbot.readthedocs.io/en/stable/using.html#manual) and [article](https://www.digitalocean.com/community/tutorials/how-to-acquire-a-let-s-encrypt-certificate-using-dns-validation-with-certbot-dns-digitalocean-on-ubuntu-20-04).
 
+# Reverse proxy to Kubernetes cluster.  https://k8s.example.com/service -> http://192.168.100.202:30000
+I have a home network k8s cluster with an ingress layer that maps each service to a unique port number.  I setup my reverse proxy to map a URL path to a unique port. 
+My example service is an https/htpd-echo pod. 
 
+## conf files
+```[jkozik@dell1 reverseproxyapache]$ cat proxy.k8s.example.com-le-ssl.conf
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+ ServerName k8s.example.com
+ ServerAlias www.k8s.example.com
+
+ DocumentRoot /var/lib/letsencrypt/http_challenges/example.com
+  <Directory /var/lib/letsencrypt/http_challenges/example.com>
+          Allow from All
+  </Directory>
+  <Location /.well-known/acme-challenge>
+      Require all granted
+      Options Indexes
+  </Location>
+
+ RewriteEngine on
+ #RewriteCond %{SERVER_NAME} =www.k8s.example.com
+ #ReWriteRule ^ https://k8s.example.com%{REQUEST_URI} [END,QSA,R=permanent]
+ RewriteCond %{HTTP:Upgrade} =websocket [NC]
+ RewriteRule /(.*)           ws://192.168.100.200:30004/$1 [P,L]
+ RewriteCond %{HTTP:Upgrade} !=websocket [NC]
+ RewriteRule /(.*)           http://192.168.100.200:30004/$1 [P,L]
+ #Header always set Strict-Transport-Security "max-age=2592000; includeSubDomains; preload" env=HTTPS
+ #Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" env=HTTPS
+ #Header always set X-Content-Type-Options "nosniff"
+ Header always set X-Frame-Options SAMEORIGIN
+
+ ProxyPreserveHost On
+ ProxyPass /.well-known !
+ ProxyPass /httpd-echo  http://192.168.100.200:30004/
+ ProxyPassReverse /httpd-echo  http://192.168.100.200:30004/
+
+   ErrorLog logs/k8s.example.com-error_log
+   CustomLog logs/k8s.example.com-access_log combined
+
+SSLCertificateFile /etc/letsencrypt/live/example.com/cert.pem
+SSLCertificateKeyFile /etc/letsencrypt/live/example.com/privkey.pem
+Include /etc/letsencrypt/options-ssl-apache.conf
+SSLCertificateChainFile /etc/letsencrypt/live/example.com/chain.pem
+</VirtualHost>
+</IfModule>
+```
+
+```
+[jkozik@dell1 reverseproxyapache]$ ls
+proxy.k8s.example.com.conf         proxy.napervilleweather.com-le-ssl.conf  README.md
+proxy.k8s.example.com-le-ssl.conf  proxy.napervilleweather.net.conf
+proxy.napervilleweather.com.conf   proxy.napervilleweather.net-le-ssl.conf
+[jkozik@dell1 reverseproxyapache]$ cat proxy.k8s.example.com.conf
+<VirtualHost *:80>
+ ServerName k8s.example.com
+ ServerAlias www.k8s.example.com
+
+ DocumentRoot /var/lib/letsencrypt/http_challenges/example.com
+  <Directory /var/lib/letsencrypt/http_challenges/example.com>
+          Allow from All
+  </Directory>
+  <Location /.well-known/acme-challenge>
+      Require all granted
+      Options Indexes
+  </Location>
+
+ RewriteEngine on
+ RewriteCond %{SERVER_NAME} =www.k8s.example.com [OR]
+ RewriteCond %{SERVER_NAME} =k8s.example.com
+ ReWriteRule ^ https://k8s.example.com%{REQUEST_URI} [END,QSA,R=permanent]
+
+ ProxyPreserveHost On
+ ProxyPass /.well-known !
+ ProxyPass /httpd-echo  http://192.168.100.200:30004/
+ ProxyPassReverse /httpd-echo  http://192.168.100.200:30004/
+   ErrorLog logs/k8s.example.com-error_log
+   CustomLog logs/k8s.example.com-access_log combined
+
+
+#RewriteEngine on
+#RewriteCond %{SERVER_NAME} =k8s.example.com
+#RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+#RewriteRule ^ https://k8s.example.com%{REQUEST_URI} [END,NE,R=permanent]
+</VirtualHost>
+[jkozik@dell1 reverseproxyapache]$
+```
 
 
 # SSL Test
